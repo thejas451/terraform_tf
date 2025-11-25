@@ -1,0 +1,75 @@
+trigger:
+- main
+
+pool:
+  vmImage: 'ubuntu-latest'
+
+variables:
+  azureSubscription: "Thejas_connect"   # Your Azure DevOps service connection
+  resourceGroup: "AzureGRP"            # Your existing Resource Group
+  tfWorkingDirectory: "."               # Where your Terraform files are
+  terraformStateFile: "terraform.tfstate"
+
+steps:
+# -------------------------------
+# 1) Install Terraform
+# -------------------------------
+- script: |
+    wget https://releases.hashicorp.com/terraform/1.5.7/terraform_1.5.7_linux_amd64.zip
+    unzip terraform_1.5.7_linux_amd64.zip
+    sudo mv terraform /usr/local/bin/
+    terraform version
+  displayName: "Install Terraform"
+
+# -------------------------------
+# 2) Azure Login
+# -------------------------------
+- task: AzureCLI@2
+  displayName: "Azure CLI Login"
+  inputs:
+    azureSubscription: $(azureSubscription)
+    scriptType: bash
+    scriptLocation: inlineScript
+    inlineScript: |
+      echo "Logged in to Azure subscription:"
+      az account show --output table
+
+# -------------------------------
+# 3) Terraform Init
+# -------------------------------
+- script: |
+    cd $(tfWorkingDirectory)
+    terraform init
+  displayName: "Terraform Init"
+
+# -------------------------------
+# 4) Terraform Validate
+# -------------------------------
+- script: |
+    cd $(tfWorkingDirectory)
+    terraform validate
+  displayName: "Terraform Validate"
+
+# -------------------------------
+# 5) Terraform Plan
+# -------------------------------
+- script: |
+    cd $(tfWorkingDirectory)
+    terraform plan -out=tfplan -var="resource_group_name=$(resourceGroup)"
+  displayName: "Terraform Plan"
+
+# -------------------------------
+# 6) Terraform Apply
+# -------------------------------
+- script: |
+    cd $(tfWorkingDirectory)
+    terraform apply -auto-approve tfplan -var="resource_group_name=$(resourceGroup)"
+  displayName: "Terraform Apply"
+
+# -------------------------------
+# 7) Show Terraform Outputs
+# -------------------------------
+- script: |
+    cd $(tfWorkingDirectory)
+    terraform output
+  displayName: "Show Terraform Outputs"
