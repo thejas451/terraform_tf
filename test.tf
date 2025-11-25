@@ -1,43 +1,60 @@
-
-
-
-# Configure the Azure provider
 provider "azurerm" {
   features {}
-  subscription_id = "515c0d20-04b3-4037-9c54-b00fa69942ed"
 }
- 
-# Create a resource group
-resource "azurerm_resource_group" "rg" {
-  name     = "thejGP"
-  location = "East US"
+
+# Existing Resource Group
+variable "resource_group_name" {
+  description = "AzureGRP"
+  type        = string
 }
- 
-# Create a storage account (must be globally unique)
-resource "azurerm_storage_account" "storage" {
-  name                     = "blobstoretheju"  # ⚠️ change to a unique name
-  resource_group_name      = azurerm_resource_group.rg.name
-  location                 = azurerm_resource_group.rg.location
+
+# Fixed prefix
+variable "storage_prefix" {
+  description = "Prefix for Storage Account"
+  type        = string
+  default     = "thejasblob"
+}
+
+variable "container_prefix" {
+  description = "Prefix for Container"
+  type        = string
+  default     = "thejcon"
+}
+
+# Random suffix for uniqueness
+resource "random_string" "suffix" {
+  length  = 6
+  upper   = false
+  special = false
+}
+
+# Fetch existing resource group
+data "azurerm_resource_group" "existing" {
+  name = var.resource_group_name
+}
+
+# Create Storage Account with prefix + random suffix
+resource "azurerm_storage_account" "main" {
+  name                     = "${var.storage_prefix}${random_string.suffix.result}" # e.g., thejasblobabc123
+  resource_group_name      = data.azurerm_resource_group.existing.name
+  location                 = data.azurerm_resource_group.existing.location
   account_tier             = "Standard"
   account_replication_type = "RAGRS"
+  kind                     = "StorageV2"
 }
- 
-# Create a blob container inside the storage account
-resource "azurerm_storage_container" "container" {
-  name                  = "thejascon"
-  storage_account_name  = azurerm_storage_account.storage.name
+
+# Create Container with prefix + random suffix
+resource "azurerm_storage_container" "main" {
+  name                  = "${var.container_prefix}${random_string.suffix.result}" # e.g., thejconabc123
+  storage_account_name  = azurerm_storage_account.main.name
   container_access_type = "private"
 }
- 
-# Output details
-output "resource_group" {
-  value = azurerm_resource_group.rg.name
+
+# Output names
+output "storage_account_name" {
+  value = azurerm_storage_account.main.name
 }
- 
-output "storage_account" {
-  value = azurerm_storage_account.storage.name
-}
- 
+
 output "container_name" {
-  value = azurerm_storage_container.container.name
+  value = azurerm_storage_container.main.name
 }
