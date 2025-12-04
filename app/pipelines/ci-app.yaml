@@ -4,19 +4,15 @@ trigger:
 pool:
   vmImage: 'ubuntu-latest'
 
-variables:
-  ACR_NAME: 'AVVAcon'
-  IMAGE_NAME: 'avva-app'
-
 steps:
 - task: DockerInstaller@0
-  displayName: Install Docker (if missing)
+  displayName: Install Docker
 
 - task: Docker@2
-  displayName: Build and push app image to ACR
+  displayName: Build and Push
   inputs:
-    containerRegistry: 'Thejas_connect'     # <- your service connection name
-    repository: '$(ACR_NAME).azurecr.io/$(IMAGE_NAME)'
+    containerRegistry: 'AVVAcon_docker'   # <-- your docker registry service connection
+    repository: 'AVVAcon.azurecr.io/avva-app'
     command: 'buildAndPush'
     Dockerfile: 'app/Dockerfile'
     buildContext: 'app'
