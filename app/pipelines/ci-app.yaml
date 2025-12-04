@@ -12,7 +12,7 @@ steps:
   displayName: Build and Push
   inputs:
     containerRegistry: 'AVVAcon_docker'   # <-- your docker registry service connection
-    repository: 'AVVAcon.azurecr.io/avva-app'
+    repository: 'avva-app'
     command: 'buildAndPush'
     Dockerfile: 'app/Dockerfile'
     buildContext: 'app'
