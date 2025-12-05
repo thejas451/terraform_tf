@@ -1,0 +1,33 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: avva-app
+  labels:
+    app: avva-app
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: avva-app
+  template:
+    metadata:
+      labels:
+        app: avva-app
+    spec:
+      containers:
+      - name: avva-app
+        image: avvacon.azurecr.io/avva-app:16
+        ports:
+        - containerPort: 80
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: avva-app-lb
+spec:
+  selector:
+    app: avva-app
+  type: LoadBalancer
+  ports:
+  - port: 80
+    targetPort: 80
